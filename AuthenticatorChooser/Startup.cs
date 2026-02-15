@@ -45,9 +45,6 @@ public class Startup {
     [Option("--set-pin", CommandOptionType.NoValue)]
     public bool setPin { get; }
 
-    [Option("--auto-elevate", CommandOptionType.NoValue)]
-    public bool autoElevate { get; }
-
     [Option(DefaultHelpOptionConvention.DefaultHelpTemplate, CommandOptionType.NoValue)]
     public bool help { get; }
 
@@ -85,7 +82,7 @@ public class Startup {
                 registerAsStartupProgram();
             }
 
-            if (autoElevate && !isElevated()) {
+            if (PinStorage.Load() != null && !isElevated()) {
                 logger.Info("Not running as administrator, attempting to relaunch elevated");
                 if (tryRelaunchElevated(buildCommandArgsFromOptions())) {
                     return 0;
@@ -198,7 +195,6 @@ public class Startup {
         cmd.Append('"').Append(Environment.ProcessPath).Append('"');
         if (options.skipAllNonSecurityKeyOptions) cmd.Append(" --skip-all-non-security-key-options");
         if (Logging.IsFileLoggingEnabled) cmd.Append(" --log");
-        if (options.pin != null) cmd.Append(" --auto-elevate");
         Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run", PROGRAM_NAME, cmd.ToString());
     }
 
@@ -233,10 +229,6 @@ public class Startup {
         if (log.enabled) {
             autostartCommand.Append(' ').Append("--log");
         }
-        if (PinStorage.Load() != null) {
-            autostartCommand.Append(' ').Append("--auto-elevate");
-        }
-
         Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run", PROGRAM_NAME, autostartCommand.ToString());
         MessageBox.Show($"{PROGRAM_NAME} is now running in the background, and will also start automatically each time you log in to Windows.", PROGRAM_NAME, MessageBoxButtons.OK,
             MessageBoxIcon.Information);
