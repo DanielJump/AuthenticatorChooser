@@ -49,6 +49,31 @@ public abstract class Win11Strategy(ChooserOptions options): PromptStrategy {
         await outerScrollViewer.WaitForFirstAsync(TreeScope.Descendants, new PropertyCondition(AutomationElement.IsPasswordProperty, true),
             TimeSpan.FromMinutes(3), ct);
 
+    protected void autoenterPin(AutomationElement fidoEl, AutomationElement outerScrollViewer, AutomationElement? pinField = null) {
+        Task.Run(async () => {
+            LOGGER.Debug("autoenterPin: waiting for security key PIN field to appear (fidoEl HWND=0x{0:X})", fidoEl.Current.NativeWindowHandle);
+            pinField ??= await findPinField(outerScrollViewer, Startup.EXITING);
+
+            if (pinField == null) {
+                LOGGER.Debug("autoenterPin: no security key PIN field found, aborting");
+                return;
+            }
+
+            LOGGER.Debug("autoenterPin: found PIN field, setting value ({0} characters)", options.pin!.Length);
+            ((ValuePattern) pinField.GetCurrentPattern(ValuePattern.Pattern)).SetValue(options.pin);
+
+            AutomationElement? okButton = fidoEl.FindFirst(TreeScope.Children, NEXT_BUTTON_CONDITION);
+            if (okButton == null) {
+                LOGGER.Error("autoenterPin: could not find OK button after entering PIN");
+                return;
+            }
+
+            LOGGER.Info("autoenterPin: clicking OK to submit PIN (fidoEl HWND=0x{0:X})", fidoEl.Current.NativeWindowHandle);
+            ((InvokePattern) okButton.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+            LOGGER.Debug("autoenterPin: done");
+        }, Startup.EXITING);
+    }
+
     protected void autosubmitPin(AutomationElement fidoEl, AutomationElement outerScrollViewer, AutomationElement? pinField = null) {
         CancellationTokenSource windowClosed = new();
         Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, fidoEl, TreeScope.Element, cleanUp);

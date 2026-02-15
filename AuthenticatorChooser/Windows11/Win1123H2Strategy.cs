@@ -8,7 +8,7 @@ public class Win1123H2Strategy(ChooserOptions options): Win11Strategy(options) {
     private static readonly Logger LOGGER = LogManager.GetLogger(typeof(Win1123H2Strategy).FullName!);
 
     public override bool canHandleTitle(string? actualTitle) => I18N.getStrings(I18N.Key.SIGN_IN_WITH_YOUR_PASSKEY)
-        .Concat(options.skipAllNonSecurityKeyOptions || options.autoSubmitPinLength >= MIN_PIN_LENGTH ? I18N.getStrings(I18N.Key.MAKING_SURE_ITS_YOU) : [])
+        .Concat(options.skipAllNonSecurityKeyOptions || options.pin != null || options.autoSubmitPinLength >= MIN_PIN_LENGTH ? I18N.getStrings(I18N.Key.MAKING_SURE_ITS_YOU) : [])
         .Any(expected => expected.Equals(actualTitle, StringComparison.CurrentCulture));
 
     /**
@@ -25,7 +25,7 @@ public class Win1123H2Strategy(ChooserOptions options): Win11Strategy(options) {
          */
         Task<IReadOnlyCollection<AutomationElement>?> authenticatorChoicesTask = findAuthenticatorChoices(outerScrollViewer, stopFinding.Token);
 
-        Task<AutomationElement?> pinFieldTask = options.autoSubmitPinLength >= MIN_PIN_LENGTH && I18N.getStrings(I18N.Key.MAKING_SURE_ITS_YOU).Contains(actualTitle, StringComparer.CurrentCulture)
+        Task<AutomationElement?> pinFieldTask = (options.pin != null || options.autoSubmitPinLength >= MIN_PIN_LENGTH) && I18N.getStrings(I18N.Key.MAKING_SURE_ITS_YOU).Contains(actualTitle, StringComparer.CurrentCulture)
             ? findPinField(outerScrollViewer, stopFinding.Token) : new TaskCompletionSource<AutomationElement?>().Task;
 
         await Task.WhenAny(authenticatorChoicesTask, pinFieldTask);
@@ -34,7 +34,11 @@ public class Win1123H2Strategy(ChooserOptions options): Win11Strategy(options) {
         if (pinFieldTask.IsCompletedSuccessfully) {
             if (pinFieldTask.Result is { } pinField) {
                 LOGGER.Debug("Found PIN field");
-                autosubmitPin(fidoEl, outerScrollViewer, pinField);
+                if (options.pin != null) {
+                    autoenterPin(fidoEl, outerScrollViewer, pinField);
+                } else {
+                    autosubmitPin(fidoEl, outerScrollViewer, pinField);
+                }
             }
             return;
         }

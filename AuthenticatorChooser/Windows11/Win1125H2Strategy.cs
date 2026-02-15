@@ -17,7 +17,7 @@ public class Win1125H2Strategy(ChooserOptions options): Win11Strategy(options) {
         new PropertyCondition(AutomationElement.HeadingLevelProperty, AutomationHeadingLevel.None));
 
     public override bool canHandleTitle(string? actualTitle) => I18N.getStrings(I18N.Key.CHOOSE_A_PASSKEY)
-        .Concat(options.skipAllNonSecurityKeyOptions || options.autoSubmitPinLength >= MIN_PIN_LENGTH ? I18N.getStrings(I18N.Key.SIGN_IN_WITH_A_PASSKEY) : [])
+        .Concat(options.skipAllNonSecurityKeyOptions || options.pin != null || options.autoSubmitPinLength >= MIN_PIN_LENGTH ? I18N.getStrings(I18N.Key.SIGN_IN_WITH_A_PASSKEY) : [])
         .Any(expected => expected.Equals(actualTitle, StringComparison.CurrentCulture));
 
     public override async Task handleWindow(string actualTitle, AutomationElement fidoEl, AutomationElement outerScrollViewer, bool isShiftDown) {
@@ -44,7 +44,9 @@ public class Win1125H2Strategy(ChooserOptions options): Win11Strategy(options) {
             }
 
             if (I18N.getStrings(I18N.Key.SECURITY_KEY).Contains(authenticatorNameEl.Current.Name, StringComparer.CurrentCulture)) {
-                if (options.autoSubmitPinLength >= MIN_PIN_LENGTH) {
+                if (options.pin != null) {
+                    autoenterPin(fidoEl, outerScrollViewer);
+                } else if (options.autoSubmitPinLength >= MIN_PIN_LENGTH) {
                     autosubmitPin(fidoEl, outerScrollViewer);
                 } else {
                     LOGGER.Debug("The current authenticator is already a security key, so there is nothing to do on this dialog");
