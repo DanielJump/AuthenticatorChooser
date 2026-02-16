@@ -42,8 +42,8 @@ public class Startup {
     [Option("-l|--log", CommandOptionType.SingleOrNoValue)]
     public (bool enabled, string? filename) log { get; }
 
-    [Option("--set-pin", CommandOptionType.NoValue)]
-    public bool setPin { get; }
+    [Option("--prompt-for-pin", CommandOptionType.NoValue)]
+    public bool promptForPin { get; }
 
     [Option(DefaultHelpOptionConvention.DefaultHelpTemplate, CommandOptionType.NoValue)]
     public bool help { get; }
@@ -94,7 +94,7 @@ public class Startup {
             using Mutex singleInstanceLock = new(false, mutexName);
             bool acquired;
             try {
-                acquired = singleInstanceLock.WaitOne(setPin ? TimeSpan.FromSeconds(10) : TimeSpan.Zero);
+                acquired = singleInstanceLock.WaitOne(promptForPin ? TimeSpan.FromSeconds(10) : TimeSpan.Zero);
             } catch (AbandonedMutexException) {
                 acquired = true;
             }
@@ -155,7 +155,7 @@ public class Startup {
 
                 using TrayIcon trayIcon = new(chooserOptions);
 
-                if (setPin) {
+                if (promptForPin) {
                     trayIcon.showSetPinDialog();
                 }
 
@@ -179,11 +179,11 @@ public class Startup {
         return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
     }
 
-    internal static string buildCommandArgs(ChooserOptions options, bool includeSetPin = false) {
+    internal static string buildCommandArgs(ChooserOptions options, bool includePromptForPin = false) {
         StringBuilder args = new();
         if (options.skipAllNonSecurityKeyOptions) args.Append(" --skip-all-non-security-key-options");
         if (Logging.IsFileLoggingEnabled) args.Append(" --log");
-        if (includeSetPin) args.Append(" --set-pin");
+        if (includePromptForPin) args.Append(" --prompt-for-pin");
         return args.ToString().TrimStart();
     }
 

@@ -21,7 +21,7 @@ internal sealed class PinInputDialog: Form {
         ShowInTaskbar   = false;
 
         Label label = new() {
-            Text     = "Enter your FIDO PIN:",
+            Text     = "Enter your security key PIN:",
             Location = new System.Drawing.Point(12, 12),
             AutoSize = true
         };

@@ -3,7 +3,7 @@
 
 [![Build status](https://img.shields.io/github/actions/workflow/status/Aldaviva/AuthenticatorChooser/dotnet.yml?branch=master&logo=github)](https://github.com/Aldaviva/AuthenticatorChooser/actions/workflows/dotnet.yml)
 
-*Program that runs in the background to automatically skip the Windows passkey phone pairing option and go straight to the USB security key.*
+*Program that runs in the background with a system tray icon to automatically skip the Windows passkey phone pairing option and go straight to the USB security key.*
 
 <!-- MarkdownTOC autolink="true" bracket="round" autoanchor="false" levels="1,2" -->
 
@@ -33,7 +33,7 @@ Now it says "To sign in to “`domain`”, choose a device with a saved passkey,
 
 ## Solution
 
-This is a background program that runs headlessly in your Windows user session. It waits for Windows FIDO credential provider prompts to appear, then chooses the Security Key option and clicks Next for you automatically. From the user's perspective, the Bluetooth screen barely even appears before it's replaced with the prompt to plug in your USB security key.
+This is a background program that runs in your Windows user session with a system tray icon. It waits for Windows FIDO credential provider prompts to appear, then chooses the Security Key option and clicks Next for you automatically. From the user's perspective, the Bluetooth screen barely even appears before it's replaced with the prompt to plug in your USB security key.
 
 <p align="center"><img src=".github/images/demo.gif" alt="demo" width="464" /></p>     
 
@@ -60,8 +60,13 @@ Even if this program doesn't click the Next button (because an extra choice was 
 1. [Download the latest release ZIP archive for your CPU architecture.](https://github.com/Aldaviva/AuthenticatorChooser/releases/latest)
 1. Extract the `AuthenticatorChooser.exe` file from the ZIP archive to a directory of your choice, like `C:\Program Files\AuthenticatorChooser\`.
 1. Run the program by double-clicking `AuthenticatorChooser.exe`.
-    - Nothing will appear because it's a background program with no UI, but you can tell it's running by searching for `AuthenticatorChooser` in Task Manager.
-1. Register the program to run automatically on user logon with **any one** of the following techniques. Be sure to change the example path below if you chose a different installation directory in step 2. If you'd like to specify additional [command-line arguments](https://github.com/Aldaviva/AuthenticatorChooser/wiki/Command%E2%80%90line-arguments) like `--skip-all-non-security-key-options`, you can do that here too.
+    - A system tray icon will appear. Right-click it to access options:
+        - **Skip all non-security-key options** — toggle to always choose Security Key, even when other valid options exist
+        - **PIN** — store your security key PIN (encrypted with DPAPI) for automatic entry. Setting a PIN requires administrator privileges; the app will prompt for elevation via UAC.
+        - **Log** — enable/disable file logging, open or clear the log file
+        - **Exit** — close the program
+    - These settings are persisted to `%LOCALAPPDATA%\AuthenticatorChooser\` and restored on restart.
+1. Register the program to run automatically on user logon with **any one** of the following techniques. Be sure to change the example path below if you chose a different installation directory in step 2.
     - Run this program once with the `--autostart-on-logon` argument
         ```ps1
         .\AuthenticatorChooser --autostart-on-logon

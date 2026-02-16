@@ -113,7 +113,7 @@ internal sealed class TrayIcon: IDisposable {
             try {
                 Process.Start(new ProcessStartInfo {
                     FileName        = Environment.ProcessPath!,
-                    Arguments       = Startup.buildCommandArgs(options, includeSetPin: true),
+                    Arguments       = Startup.buildCommandArgs(options, includePromptForPin: true),
                     Verb            = "runas",
                     UseShellExecute = true
                 });
